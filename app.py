@@ -35,12 +35,27 @@ def main():
         .css-1d391kg {
             padding: 1rem;
         }
+        .stSelectbox [data-baseweb=select] {
+            margin-top: 0rem;
+        }
         </style>
     """, unsafe_allow_html=True)
+
+    # Inicializar tema si no existe
+    if 'theme' not in st.session_state:
+        st.session_state.theme = 'light'
 
     if not st.session_state.logged_in:
         st.title("🏋️‍♂️ Fitness Tracker")
         st.markdown("### Tu compañero personal para seguir tu progreso en el gimnasio")
+
+        # Selector de tema
+        theme = st.sidebar.radio(
+            "🎨 Tema",
+            ["🌞 Modo Claro", "🌙 Modo Oscuro"],
+            index=0 if st.session_state.theme == 'light' else 1
+        )
+        st.session_state.theme = 'light' if "Claro" in theme else 'dark'
 
         col1, col2 = st.columns(2)
 
@@ -72,6 +87,16 @@ def main():
         # Sidebar con información del usuario y navegación
         with st.sidebar:
             st.title(f"👋 Hola, {st.session_state.username}")
+            st.markdown("---")
+
+            # Selector de tema
+            theme = st.radio(
+                "🎨 Tema",
+                ["🌞 Modo Claro", "🌙 Modo Oscuro"],
+                index=0 if st.session_state.theme == 'light' else 1
+            )
+            st.session_state.theme = 'light' if "Claro" in theme else 'dark'
+
             st.markdown("---")
             menu = st.selectbox(
                 "📋 Menú",
