@@ -2,6 +2,37 @@ import pandas as pd
 from datetime import datetime
 import streamlit as st
 
+EJERCICIOS_PREDEFINIDOS = [
+    "Press Inclinado con Mancuernas",
+    "Press plano en maquina",
+    "Peck deck",
+    "Elevaciones laterales en polea",
+    "Elevaciones Laterales sentado con mancuerna",
+    "Pajaros con mancuerna",
+    "Press Frances",
+    "Extension de Triceps en Polea Alta",
+    "Dominadas",
+    "Remo en polea",
+    "Jalon al Pecho",
+    "Pull Over en Polea",
+    "Press Inclinado en maquina",
+    "Press plano con mancuerna",
+    "Cruces en polea",
+    "Elevaciones laterales con mancuerna",
+    "Extension de Triceps en Polea Baja",
+    "Extension de Triceps en Polea Alta unilateral",
+    "Sentadilla",
+    "Sentadilla Hack en Maquina",
+    "Bulgaras",
+    "Extension de Cuadriceps",
+    "Curl Femoral",
+    "Aduptores",
+    "Pantorrilla",
+    "Abdominales con rueda",
+    "Plancha Abdominal",
+    "Encogimiento Abdominal"
+]
+
 class DataManager:
     def __init__(self):
         """Inicializa el gestor de datos con almacenamiento en memoria"""

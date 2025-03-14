@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime, date
 import plotly.express as px
-from data_manager import DataManager
+from data_manager import DataManager, EJERCICIOS_PREDEFINIDOS
 from utils import initialize_session_state
 
 # Configuración inicial de la página
@@ -61,7 +61,12 @@ def main():
             col1, col2 = st.columns(2)
             with col1:
                 fecha = st.date_input("Fecha", date.today())
-                ejercicio = st.text_input("Nombre del Ejercicio")
+                # Opción para seleccionar ejercicio predefinido o personalizado
+                tipo_ejercicio = st.radio("Tipo de ejercicio", ["Predefinido", "Personalizado"])
+                if tipo_ejercicio == "Predefinido":
+                    ejercicio = st.selectbox("Selecciona el ejercicio", EJERCICIOS_PREDEFINIDOS)
+                else:
+                    ejercicio = st.text_input("Nombre del ejercicio personalizado")
                 series = st.number_input("Número de Series", min_value=1, value=3)
 
             with col2:
