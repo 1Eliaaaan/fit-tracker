@@ -9,7 +9,7 @@ class DataManager:
             st.session_state.users = {}
         if 'ejercicios' not in st.session_state:
             st.session_state.ejercicios = pd.DataFrame(
-                columns=['username', 'fecha', 'ejercicio', 'series', 'repeticiones', 'peso'])
+                columns=['username', 'fecha', 'ejercicio', 'series', 'repeticiones', 'pesos_por_serie'])
         if 'pesos' not in st.session_state:
             st.session_state.pesos = pd.DataFrame(
                 columns=['username', 'fecha', 'peso'])
@@ -25,18 +25,18 @@ class DataManager:
         """Verifica las credenciales del usuario"""
         return username in st.session_state.users and st.session_state.users[username] == password
 
-    def registrar_ejercicio(self, username, fecha, ejercicio, series, repeticiones, peso):
-        """Registra un nuevo ejercicio"""
+    def registrar_ejercicio(self, username, fecha, ejercicio, series, repeticiones, pesos_por_serie):
+        """Registra un nuevo ejercicio con pesos diferentes por serie"""
         nuevo_ejercicio = pd.DataFrame([{
             'username': username,
             'fecha': fecha,
             'ejercicio': ejercicio,
             'series': series,
             'repeticiones': repeticiones,
-            'peso': peso
+            'pesos_por_serie': pesos_por_serie  # Lista de pesos, uno por cada serie
         }])
         st.session_state.ejercicios = pd.concat([st.session_state.ejercicios, nuevo_ejercicio], 
-                                              ignore_index=True)
+                                               ignore_index=True)
 
     def registrar_peso(self, username, fecha, peso):
         """Registra un nuevo peso corporal"""
@@ -46,7 +46,7 @@ class DataManager:
             'peso': peso
         }])
         st.session_state.pesos = pd.concat([st.session_state.pesos, nuevo_peso], 
-                                         ignore_index=True)
+                                          ignore_index=True)
 
     def obtener_ejercicios(self, username):
         """Obtiene todos los ejercicios del usuario"""
