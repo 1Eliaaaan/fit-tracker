@@ -120,7 +120,55 @@ def main():
                 ejercicios_display['pesos_por_serie'] = ejercicios_display['pesos_por_serie'].apply(
                     lambda x: ', '.join([f'{peso}kg' for peso in x])
                 )
-                st.dataframe(ejercicios_display)
+
+                # Agregar botones de edición y eliminación
+                for idx, row in ejercicios.iterrows():
+                    with st.expander(f"{row['fecha'].strftime('%Y-%m-%d')} - {row['ejercicio']}"):
+                        col1, col2, col3 = st.columns([2,1,1])
+
+                        with col1:
+                            st.write(f"Series: {row['series']}")
+                            st.write(f"Repeticiones: {row['repeticiones']}")
+                            st.write(f"Pesos: {', '.join([f'{peso}kg' for peso in row['pesos_por_serie']])}")
+
+                        with col2:
+                            if st.button("Editar", key=f"edit_{idx}"):
+                                # Campos de edición
+                                nueva_fecha = st.date_input("Nueva fecha", row['fecha'])
+                                if row['ejercicio'] in EJERCICIOS_PREDEFINIDOS:
+                                    nuevo_ejercicio = st.selectbox("Nuevo ejercicio", EJERCICIOS_PREDEFINIDOS, 
+                                                                 index=EJERCICIOS_PREDEFINIDOS.index(row['ejercicio']))
+                                else:
+                                    nuevo_ejercicio = st.text_input("Nuevo ejercicio", row['ejercicio'])
+                                nuevas_series = st.number_input("Nuevas series", min_value=1, value=row['series'])
+                                nuevas_reps = st.number_input("Nuevas repeticiones", min_value=1, value=row['repeticiones'])
+
+                                # Campos para nuevos pesos
+                                nuevos_pesos = []
+                                for i in range(nuevas_series):
+                                    peso_actual = row['pesos_por_serie'][i] if i < len(row['pesos_por_serie']) else 0
+                                    nuevo_peso = st.number_input(f"Nuevo peso serie {i+1}", 
+                                                               min_value=0.0, 
+                                                               value=float(peso_actual),
+                                                               key=f"edit_peso_{idx}_{i}")
+                                    nuevos_pesos.append(nuevo_peso)
+
+                                if st.button("Guardar cambios", key=f"save_{idx}"):
+                                    if data_manager.actualizar_ejercicio(idx, 
+                                                                       st.session_state.username,
+                                                                       nueva_fecha,
+                                                                       nuevo_ejercicio,
+                                                                       nuevas_series,
+                                                                       nuevas_reps,
+                                                                       nuevos_pesos):
+                                        st.success("Ejercicio actualizado exitosamente")
+                                        st.rerun()
+
+                        with col3:
+                            if st.button("Eliminar", key=f"delete_{idx}"):
+                                if data_manager.eliminar_ejercicio(idx):
+                                    st.success("Ejercicio eliminado exitosamente")
+                                    st.rerun()
 
                 # Gráfico de progreso por ejercicio
                 ejercicio_seleccionado = st.selectbox(
@@ -144,10 +192,40 @@ def main():
 
             pesos = data_manager.obtener_pesos(st.session_state.username)
             if not pesos.empty:
+                # Mostrar los registros de peso con opciones de edición
+                for idx, row in pesos.iterrows():
+                    with st.expander(f"Peso registrado el {row['fecha'].strftime('%Y-%m-%d')}"):
+                        col1, col2, col3 = st.columns([2,1,1])
+
+                        with col1:
+                            st.write(f"Peso: {row['peso']}kg")
+
+                        with col2:
+                            if st.button("Editar", key=f"edit_peso_{idx}"):
+                                nueva_fecha = st.date_input("Nueva fecha", row['fecha'])
+                                nuevo_peso = st.number_input("Nuevo peso", 
+                                                           min_value=30.0, 
+                                                           max_value=300.0, 
+                                                           value=float(row['peso']))
+
+                                if st.button("Guardar cambios", key=f"save_peso_{idx}"):
+                                    if data_manager.actualizar_peso(idx,
+                                                                  st.session_state.username,
+                                                                  nueva_fecha,
+                                                                  nuevo_peso):
+                                        st.success("Peso actualizado exitosamente")
+                                        st.rerun()
+
+                        with col3:
+                            if st.button("Eliminar", key=f"delete_peso_{idx}"):
+                                if data_manager.eliminar_peso(idx):
+                                    st.success("Peso eliminado exitosamente")
+                                    st.rerun()
+
+                # Gráfico de progreso de peso
                 fig = px.line(pesos, x='fecha', y='peso',
                             title='Progreso de Peso Corporal')
                 st.plotly_chart(fig)
-                st.dataframe(pesos)
             else:
                 st.info("No hay registros de peso")
 

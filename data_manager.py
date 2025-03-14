@@ -69,6 +69,27 @@ class DataManager:
         st.session_state.ejercicios = pd.concat([st.session_state.ejercicios, nuevo_ejercicio], 
                                                ignore_index=True)
 
+    def actualizar_ejercicio(self, index, username, fecha, ejercicio, series, repeticiones, pesos_por_serie):
+        """Actualiza un ejercicio existente"""
+        if index >= 0 and index < len(st.session_state.ejercicios):
+            st.session_state.ejercicios.loc[index] = {
+                'username': username,
+                'fecha': fecha,
+                'ejercicio': ejercicio,
+                'series': series,
+                'repeticiones': repeticiones,
+                'pesos_por_serie': pesos_por_serie
+            }
+            return True
+        return False
+
+    def eliminar_ejercicio(self, index):
+        """Elimina un ejercicio existente"""
+        if index >= 0 and index < len(st.session_state.ejercicios):
+            st.session_state.ejercicios = st.session_state.ejercicios.drop(index).reset_index(drop=True)
+            return True
+        return False
+
     def registrar_peso(self, username, fecha, peso):
         """Registra un nuevo peso corporal"""
         nuevo_peso = pd.DataFrame([{
@@ -78,6 +99,24 @@ class DataManager:
         }])
         st.session_state.pesos = pd.concat([st.session_state.pesos, nuevo_peso], 
                                           ignore_index=True)
+
+    def actualizar_peso(self, index, username, fecha, peso):
+        """Actualiza un registro de peso existente"""
+        if index >= 0 and index < len(st.session_state.pesos):
+            st.session_state.pesos.loc[index] = {
+                'username': username,
+                'fecha': fecha,
+                'peso': peso
+            }
+            return True
+        return False
+
+    def eliminar_peso(self, index):
+        """Elimina un registro de peso existente"""
+        if index >= 0 and index < len(st.session_state.pesos):
+            st.session_state.pesos = st.session_state.pesos.drop(index).reset_index(drop=True)
+            return True
+        return False
 
     def obtener_ejercicios(self, username):
         """Obtiene todos los ejercicios del usuario"""
