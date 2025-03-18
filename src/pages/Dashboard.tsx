@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Calendar from 'react-calendar';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, PieChart, Pie, Cell, ComposedChart, Bar } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,PieChart, Pie, Cell, ComposedChart, Bar } from 'recharts';
 import { supabase } from '../lib/supabase';
 import { SunIcon, MoonIcon, PlusIcon, TrashIcon, ExclamationCircleIcon, PencilIcon, ChartBarIcon, CalendarIcon, ClipboardIcon, ArrowTrendingUpIcon, Bars3Icon, XMarkIcon, CalculatorIcon } from '@heroicons/react/24/outline';
 import { motion, AnimatePresence } from 'framer-motion';
-import type { Exercise, BodyWeight, WorkoutDay, Set } from '../types';
+import type { Exercise, WorkoutDay, Set } from '../types';
 import { PRESET_EXERCISES } from '../types';
 
 export default function Dashboard() {
@@ -673,7 +673,7 @@ export default function Dashboard() {
                   fill="#8884d8"
                   dataKey="value"
                 >
-                  {exerciseFrequency.map((entry, index) => (
+                  {exerciseFrequency.map((_entry, index) => (
                     <Cell key={`cell-${index}`} fill={chartColors[index % chartColors.length]} />
                   ))}
                 </Pie>
