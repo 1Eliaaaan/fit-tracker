@@ -140,9 +140,13 @@ export default function Dashboard() {
     setExerciseSets(exerciseSets.filter((_, i) => i !== index));
   };
 
-  const handleSetChange = (index: number, field: 'reps' | 'weight', value: number) => {
+  const handleSetChange = (index: number, field: 'reps' | 'weight', value: string) => {
     const newSets = [...exerciseSets];
-    newSets[index][field] = field === 'reps' ? Math.floor(value) : parseFloat(value.toFixed(2));
+    if (field === 'reps') {
+      newSets[index][field] = Math.floor(Number(value));
+    } else {
+      newSets[index][field] = value === '' ? 0 : parseFloat(value);
+    }
     setExerciseSets(newSets);
   };
 
@@ -693,7 +697,7 @@ export default function Dashboard() {
     );
   };
 
-  // Add this new component for weight conversion
+  // Update the WeightConverter component
   const WeightConverter = () => {
     const [pounds, setPounds] = useState<string>('');
     const [kilograms, setKilograms] = useState<string>('');
@@ -706,7 +710,7 @@ export default function Dashboard() {
       }
       const lbs = parseFloat(value);
       if (!isNaN(lbs)) {
-        setKilograms((lbs * 0.45359237).toFixed(2));
+        setKilograms((lbs * 0.45359237).toString());
       }
     };
 
@@ -718,18 +722,12 @@ export default function Dashboard() {
       }
       const kg = parseFloat(value);
       if (!isNaN(kg)) {
-        setPounds((kg / 0.45359237).toFixed(2));
+        setPounds((kg / 0.45359237).toString());
       }
     };
 
     return (
-      <motion.div
-        variants={slideVariants}
-        initial="hidden"
-        animate="visible"
-        exit="exit"
-        className="bg-white dark:bg-gray-800 shadow-lg rounded-2xl p-6 transition-all duration-200 hover:shadow-xl"
-      >
+      <div className="bg-white dark:bg-gray-800 shadow-lg rounded-2xl p-6 transition-all duration-200 hover:shadow-xl">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center mb-6">
           <CalculatorIcon className="h-6 w-6 mr-2 text-green-500" />
           Weight Converter
@@ -745,7 +743,7 @@ export default function Dashboard() {
               value={pounds}
               onChange={(e) => handlePoundsChange(e.target.value)}
               placeholder="Enter weight in pounds"
-              step="0.1"
+              step="any"
               min="0"
               className="block w-full border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm py-2 px-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400"
             />
@@ -760,7 +758,7 @@ export default function Dashboard() {
               value={kilograms}
               onChange={(e) => handleKilogramsChange(e.target.value)}
               placeholder="Enter weight in kilograms"
-              step="0.1"
+              step="any"
               min="0"
               className="block w-full border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm py-2 px-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400"
             />
@@ -769,7 +767,7 @@ export default function Dashboard() {
         <p className="mt-4 text-sm text-gray-500 dark:text-gray-400 text-center">
           Conversion rate: 1 lb = 0.45359237 kg
         </p>
-      </motion.div>
+      </div>
     );
   };
 
@@ -1110,8 +1108,8 @@ export default function Dashboard() {
                               <input
                                 type="number"
                                 id={`reps-${index}`}
-                                value={set.reps}
-                                onChange={(e) => handleSetChange(index, 'reps', parseInt(e.target.value))}
+                                value={set.reps || ''}
+                                onChange={(e) => handleSetChange(index, 'reps', e.target.value)}
                                 min="0"
                                 placeholder="Number of repetitions"
                                 className="block w-full border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm py-2 px-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400"
@@ -1124,9 +1122,9 @@ export default function Dashboard() {
                               <input
                                 type="number"
                                 id={`weight-${index}`}
-                                value={set.weight}
-                                onChange={(e) => handleSetChange(index, 'weight', parseFloat(e.target.value))}
-                                step="0.25"
+                                value={set.weight || ''}
+                                onChange={(e) => handleSetChange(index, 'weight', e.target.value)}
+                                step="any"
                                 min="0"
                                 placeholder="Weight in kilograms"
                                 className="block w-full border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm py-2 px-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400"
@@ -1193,7 +1191,7 @@ export default function Dashboard() {
                           type="number"
                           name="weight"
                           id="weight"
-                          step="0.25"
+                          step="any"
                           min="0"
                           required
                           defaultValue={bodyWeight || ''}
@@ -1215,11 +1213,9 @@ export default function Dashboard() {
             </AnimatePresence>
 
             {/* Weight Converter */}
-            <AnimatePresence>
-              {(showExerciseForm || window.innerWidth >= 768) && (
-                <WeightConverter />
-              )}
-            </AnimatePresence>
+            {(showExerciseForm || window.innerWidth >= 768) && (
+              <WeightConverter />
+            )}
 
             {/* Progress Charts */}
             <AnimatePresence>
