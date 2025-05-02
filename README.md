@@ -39,9 +39,7 @@ create table exercises (
   id uuid default uuid_generate_v4() primary key,
   user_id uuid references auth.users not null,
   name text not null,
-  sets integer not null,
-  reps integer not null,
-  weight numeric not null,
+  sets jsonb not null,
   date date not null,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
