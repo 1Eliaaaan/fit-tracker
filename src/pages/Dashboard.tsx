@@ -371,7 +371,7 @@ export default function Dashboard() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={handleLogout}
-                className="px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 transition-all duration-200 shadow-lg hover:shadow-xl"
+                className="px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-red-700 bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 transition-all duration-200 shadow-lg hover:shadow-xl"
               >
                 Logout
               </motion.button>
@@ -411,7 +411,7 @@ export default function Dashboard() {
                 </button>
                 <button
                   onClick={handleLogout}
-                  className="w-full p-2 text-center text-white bg-gradient-to-r from-green-500 to-blue-500 rounded-lg"
+                  className="w-full p-2 text-center text-red-700 bg-gradient-to-r from-green-500 to-blue-500 rounded-lg"
                 >
                   Logout
                 </button>
