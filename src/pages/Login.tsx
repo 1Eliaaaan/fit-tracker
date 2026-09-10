@@ -17,15 +17,9 @@ export default function Login() {
     setError('');
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
-      if (data.user) {
-        navigate('/dashboard');
-      }
+      if (data.user) navigate('/dashboard');
     } catch (error: any) {
       setError(error.message);
     } finally {
@@ -34,101 +28,100 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-green-50 dark:from-gray-900 dark:to-gray-800 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-iron-950 font-body flex flex-col justify-center py-12 px-4 relative overflow-hidden">
+      {/* Background glow */}
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[500px] h-[400px] bg-lime-400/5 rounded-full blur-[120px] pointer-events-none" />
+
       <motion.div
-        initial={{ opacity: 0, y: -20 }}
+        initial={{ opacity: 0, y: -16 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="sm:mx-auto sm:w-full sm:max-w-md"
+        transition={{ duration: 0.4 }}
+        className="relative sm:mx-auto sm:w-full sm:max-w-md"
       >
-        <h2 className="text-center text-3xl font-extrabold text-gray-900 dark:text-white mb-2">
-          Welcome back to <span className="text-green-600 dark:text-green-400">FitTrack</span>
+        <Link to="/" className="block text-center mb-8">
+          <h1 className="text-3xl font-display font-bold text-iron-50">
+            Fit<span className="text-lime-400">Track</span>
+          </h1>
+        </Link>
+        <h2 className="text-center text-xl font-display font-semibold text-iron-200 mb-1">
+          Bienvenido de vuelta
         </h2>
-        <p className="text-center text-gray-600 dark:text-gray-300">
-          Sign in to continue your fitness journey
+        <p className="text-center text-iron-500 text-sm">
+          Inicia sesión para continuar
         </p>
       </motion.div>
 
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5, delay: 0.1 }}
-        className="mt-8 sm:mx-auto sm:w-full sm:max-w-md"
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.1 }}
+        className="relative mt-8 sm:mx-auto sm:w-full sm:max-w-md"
       >
-        <div className="bg-white dark:bg-gray-800 py-8 px-4 shadow-lg sm:rounded-xl sm:px-10">
-          <form className="space-y-6" onSubmit={handleLogin}>
+        <div className="bg-iron-900 border border-iron-800 rounded-2xl p-6 sm:p-8">
+          <form className="space-y-5" onSubmit={handleLogin}>
             {error && (
               <motion.div
-                initial={{ opacity: 0, y: -10 }}
+                initial={{ opacity: 0, y: -8 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-red-50 dark:bg-red-900/50 border border-red-400 dark:border-red-500 text-red-700 dark:text-red-200 px-4 py-3 rounded-lg flex items-center"
+                className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-red-500/10 border border-red-500/20"
               >
-                <ExclamationCircleIcon className="h-5 w-5 mr-2" />
-                {error}
+                <ExclamationCircleIcon className="h-4 w-4 text-red-400 flex-shrink-0" />
+                <span className="text-sm text-red-300">{error}</span>
               </motion.div>
             )}
-            
+
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Email address
+              <label htmlFor="email" className="block text-xs font-medium text-iron-400 uppercase tracking-wider mb-1.5">
+                Email
               </label>
-              <div className="mt-1">
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-700 dark:text-white"
-                  placeholder="Enter your email"
-                />
-              </div>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full bg-iron-800 border border-iron-700 rounded-xl py-2.5 px-4 text-sm text-iron-100 placeholder-iron-500 focus:outline-none focus:border-lime-400/50 focus:ring-1 focus:ring-lime-400/20 transition-all"
+                placeholder="tu@email.com"
+              />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Password
+              <label htmlFor="password" className="block text-xs font-medium text-iron-400 uppercase tracking-wider mb-1.5">
+                Contraseña
               </label>
-              <div className="mt-1">
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-700 dark:text-white"
-                  placeholder="Enter your password"
-                />
-              </div>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full bg-iron-800 border border-iron-700 rounded-xl py-2.5 px-4 text-sm text-iron-100 placeholder-iron-500 focus:outline-none focus:border-lime-400/50 focus:ring-1 focus:ring-lime-400/20 transition-all"
+                placeholder="••••••••"
+              />
             </div>
 
-            <div>
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                type="submit"
-                disabled={loading}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-              >
-                {loading ? 'Signing in...' : 'Sign in'}
-              </motion.button>
-            </div>
+            <motion.button
+              whileTap={{ scale: 0.98 }}
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 rounded-xl bg-lime-400 hover:bg-lime-300 text-iron-950 font-bold text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-lime-400/10"
+            >
+              {loading ? 'Entrando...' : 'Iniciar Sesión'}
+            </motion.button>
           </form>
 
-          <div className="mt-6">
-            <div className="text-center">
-              <Link 
-                to="/register" 
-                className="text-green-600 hover:text-green-500 dark:text-green-400 dark:hover:text-green-300 font-medium transition-colors"
-              >
-                Don't have an account? Sign up
-              </Link>
-            </div>
+          <div className="mt-6 text-center">
+            <Link
+              to="/register"
+              className="text-sm text-lime-400 hover:text-lime-300 font-medium transition-colors"
+            >
+              ¿No tienes cuenta? Regístrate
+            </Link>
           </div>
         </div>
       </motion.div>
     </div>
   );
-} 
+}

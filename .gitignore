@@ -25,3 +25,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Agent & CLI internal files
+.agents/
+skills-lock.json
+supabase/.temp/

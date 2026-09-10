@@ -1,80 +1,121 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ChartBarIcon, ScaleIcon, ClipboardDocumentCheckIcon } from '@heroicons/react/24/outline';
+import { ChartBarIcon, ScaleIcon, ClipboardDocumentCheckIcon, BoltIcon } from '@heroicons/react/24/outline';
 
 export default function Landing() {
   const features = [
     {
-      name: 'Track Your Progress',
-      description: 'Monitor your workouts and see your improvement over time with detailed charts and analytics.',
+      name: 'Trackea tus Entrenos',
+      description: 'Registra ejercicios, series y repeticiones en segundos con nuestro flujo rápido.',
+      icon: BoltIcon,
+      color: '#84f215',
+    },
+    {
+      name: 'Mide tu Progreso',
+      description: 'Visualiza tu volumen, peso corporal y ejercicios favoritos con gráficas detalladas.',
       icon: ChartBarIcon,
+      color: '#22d3ee',
     },
     {
-      name: 'Weight Management',
-      description: 'Keep track of your body weight and use our built-in weight converter for easy calculations.',
+      name: 'Peso Corporal',
+      description: 'Lleva un registro diario de tu peso y ve la tendencia en el tiempo.',
       icon: ScaleIcon,
+      color: '#a78bfa',
     },
     {
-      name: 'Exercise Library',
-      description: 'Access a comprehensive list of exercises and track your performance for each one.',
+      name: 'Librería de Ejercicios',
+      description: '60+ ejercicios organizados por grupo muscular con descripción de técnica.',
       icon: ClipboardDocumentCheckIcon,
+      color: '#fb923c',
     },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-green-50 dark:from-gray-900 dark:to-gray-800">
-      <div className="container mx-auto px-4 py-16">
+    <div className="min-h-screen bg-iron-950 font-body relative overflow-hidden">
+      {/* Background glow */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-lime-400/5 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-[400px] h-[300px] bg-cyan-400/5 rounded-full blur-[100px] pointer-events-none" />
+
+      <div className="relative max-w-5xl mx-auto px-6 py-16 md:py-24">
+        {/* Hero */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="text-center"
+          transition={{ duration: 0.6 }}
+          className="text-center mb-20"
         >
-          <h1 className="text-5xl font-bold text-gray-900 dark:text-white mb-4">
-            Fit<span className="text-green-600 dark:text-green-400">Track</span>
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-lime-400/10 border border-lime-400/20 text-lime-400 text-xs font-semibold mb-8 tracking-wide"
+          >
+            🏋️ TU COMPAÑERO FITNESS
+          </motion.div>
+
+          <h1 className="text-5xl md:text-7xl font-display font-extrabold tracking-tight text-iron-50 leading-tight">
+            Trackea tu
+            <br />
+            <span className="bg-gradient-to-r from-lime-400 via-lime-300 to-cyan-400 bg-clip-text text-transparent">
+              progreso
+            </span>{' '}
+            fitness
           </h1>
-          <p className="text-xl text-gray-600 dark:text-gray-300 mb-12 max-w-2xl mx-auto">
-            Your personal fitness companion. Track your workouts, monitor progress, and achieve your fitness goals with our comprehensive tracking tools.
+
+          <p className="text-lg text-iron-400 mt-6 max-w-xl mx-auto leading-relaxed">
+            Registra ejercicios, ve tus estadísticas y mejora cada día.
+            Simple, rápido y diseñado para el gym.
           </p>
 
-          <div className="flex justify-center space-x-4 mb-16">
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Link
-                to="/login"
-                className="bg-green-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors shadow-lg hover:shadow-xl"
-              >
-                Get Started
-              </Link>
-            </motion.div>
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+          <div className="flex flex-col sm:flex-row justify-center gap-3 mt-10">
+            <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
               <Link
                 to="/register"
-                className="bg-white text-green-600 border-2 border-green-600 px-8 py-3 rounded-lg font-semibold hover:bg-green-50 transition-colors shadow-lg hover:shadow-xl"
+                className="inline-flex items-center justify-center px-8 py-3.5 rounded-xl bg-lime-400 hover:bg-lime-300 text-iron-950 font-bold text-sm transition-all shadow-xl shadow-lime-400/20"
               >
-                Create Account
+                Empezar Gratis →
+              </Link>
+            </motion.div>
+            <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+              <Link
+                to="/login"
+                className="inline-flex items-center justify-center px-8 py-3.5 rounded-xl border border-iron-700 hover:border-iron-600 text-iron-300 hover:text-iron-100 font-semibold text-sm transition-all"
+              >
+                Ya tengo cuenta
               </Link>
             </motion.div>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16">
-            {features.map((feature) => (
-              <motion.div
-                key={feature.name}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow"
-              >
-                <div className="flex flex-col items-center text-center">
-                  <feature.icon className="h-12 w-12 text-green-600 dark:text-green-400 mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{feature.name}</h3>
-                  <p className="text-gray-600 dark:text-gray-300">{feature.description}</p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
         </motion.div>
+
+        {/* Features */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-3xl mx-auto">
+          {features.map((feature, i) => (
+            <motion.div
+              key={feature.name}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.3 + i * 0.1 }}
+              className="bg-iron-900/60 border border-iron-800 rounded-2xl p-6 hover:border-iron-700 transition-all group"
+            >
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center mb-4"
+                style={{ backgroundColor: feature.color + '15' }}
+              >
+                <feature.icon className="h-5 w-5" style={{ color: feature.color }} />
+              </div>
+              <h3 className="font-display font-semibold text-iron-100 mb-1.5">{feature.name}</h3>
+              <p className="text-sm text-iron-500 leading-relaxed">{feature.description}</p>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Footer */}
+        <div className="text-center mt-20">
+          <p className="text-xs text-iron-600">
+            FitTrack — Hecho con 💪 para el gym
+          </p>
+        </div>
       </div>
     </div>
   );
-} 
+}

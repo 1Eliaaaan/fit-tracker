@@ -1,100 +1,63 @@
-# FitTrack
+# 🏋️ FitTrack v2 — Tu Compañero de Entrenamiento Inteligente
 
-A modern fitness tracking application built with React, TypeScript, Tailwind CSS, and Supabase.
+FitTrack v2 es una aplicación moderna y utilitaria para el seguimiento de entrenamientos, nutrición y descanso en tiempo real, diseñada tanto para móvil como para escritorio, con acompañamiento interactivo, cronómetro a prueba de reinicios de RAM, análisis y embeddings semánticos con OpenAI.
 
-## Features
+---
 
-- User authentication (login/register)
-- Calendar-based workout tracking
-- Exercise logging with sets, reps, and weight
-- Body weight tracking
-- Progress visualization with charts
-- Responsive design
+## ⚡ Novedades y Módulos
 
-## Prerequisites
+### 1. 🛡️ Flujo de Entrenamiento a Prueba de Cierres de RAM
+- **Cronómetro basado en Timestamp**: En vez de almacenar contadores volátiles en memoria, se guarda `restStartedAt` con marcas de tiempo en `localStorage`. Si el sistema operativo de tu celular cierra el navegador por falta de RAM, al volver a abrirlo calcula la diferencia de tiempo real y continúa el conteo exacto sin perder un solo segundo.
+- **Persistencia total de sesión**: Si el teléfono se apaga o recargas la página, vuelves exactamente a la misma fase (`executing_set`, `resting`, `selecting_exercise`), con las series y valores previos intactos.
+- **Edición granular de series finalizadas**: Corrige reps, peso o tiempo de descanso de series previas sin reactivar el cronómetro.
 
-- Node.js (v14 or higher)
-- npm or yarn
-- Supabase account and project
+### 2. 📅 Historial con Vista de Calendario y Lista
+- **Selector de Vista**: Cambia entre **Lista Semanal** y **Calendario Mensual**.
+- **Días entrenados resaltados**: Cada día con sesión completada se destaca con borde verde lima e ícono de fuego 🔥.
+- **Detalle al toque**: Toca cualquier día para ver las sesiones, volumen acumulado, lista de ejercicios y análisis de IA.
 
-## Setup
+### 3. 🍲 Nutrición & Comida (Chat Libre + IA Estructurada + Embeddings)
+- **Registro conversacional**: Escribe lo que comiste en lenguaje natural (ej. *"Hoy de almuerzo comí 200g de arroz, 150g de carne molida, ensalada de tomate y jugo de maracuyá"*).
+- **Extracción inteligente**: La IA detecta el tipo de comida (*desayuno, almuerzo, merienda, cena, snack*), extrae los ingredientes individuales, porciones estimadas, calorías y macronutrientes (P/C/G).
+- **Embeddings semánticos**: Cada comida genera un vector en `pgvector` (`text-embedding-3-small`) para memoria semántica a largo plazo.
+- **Feedback bajo demanda**: Botón **`✨ Pedir Análisis IA`** para evaluar tu ingesta calórica y proteica contra tus objetivos solo cuando lo solicites, sin gastar tokens innecesarios.
 
-1. Clone the repository
-2. Install dependencies:
+### 4. 🌙 Descanso & Sueño (Recuperación)
+- **Registro diario**: Horas de sueño (con controles `+` y `−`), calificación de calidad (Mala, Regular, Buena, Excelente), hora de acostarse/despertar y notas de descanso.
+- **Métricas**: Promedio de horas de los últimos 7 días e historial de las últimas 2 semanas.
+- **Feedback de recuperación bajo demanda**: Botón **`✨ Pedir Análisis IA`** que correlaciona tu descanso con la fatiga y el volumen de entrenamiento muscular.
+
+---
+
+## 🛠️ Stack Tecnológico
+
+- **Frontend**: React 19 + TypeScript + Vite
+- **Estilos**: Tailwind CSS v3 (tema oscuro industrial zinc-950 con acento lima eléctrica `#a3e635`) + Framer Motion
+- **Iconografía**: Lucide React
+- **Estado Global**: Zustand (con middleware persist para rescate de sesión y cronómetro)
+- **Consultas & Caché**: TanStack Query (React Query)
+- **Base de Datos & Auth**: Supabase (PostgreSQL + RLS + pgvector)
+- **Inteligencia Artificial**: OpenAI GPT-4o-mini + text-embedding-3-small via Supabase Edge Functions
+
+---
+
+## 🗄️ Configuración de Base de Datos en Supabase
+
+1. Ejecuta primero `supabase/schema_v2.sql` (tablas de perfiles, sesiones, series y vistas).
+2. Ejecuta `supabase/schema_v3_nutrition_sleep.sql` (tablas de nutrición con pgvector, sueño y feedback de IA).
+
+---
+
+## 🤖 Supabase Edge Functions
+
+Para desplegar las 3 funciones en tu proyecto:
 ```bash
-npm install
+npx supabase functions deploy generate-workout-summary --no-verify-jwt
+npx supabase functions deploy parse-meal --no-verify-jwt
+npx supabase functions deploy ai-advisor --no-verify-jwt
 ```
 
-3. Create a `.env` file in the root directory with your Supabase credentials:
-```env
-VITE_SUPABASE_URL=your_supabase_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-```
-
-4. Set up your Supabase database tables:
-
-```sql
--- Create exercises table
-create table exercises (
-  id uuid default uuid_generate_v4() primary key,
-  user_id uuid references auth.users not null,
-  name text not null,
-  sets jsonb not null,
-  date date not null,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
-);
-
--- Create body_weights table
-create table body_weights (
-  id uuid default uuid_generate_v4() primary key,
-  user_id uuid references auth.users not null,
-  weight numeric not null,
-  date date not null,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
-  unique(user_id, date)
-);
-
--- Set up row level security
-alter table exercises enable row level security;
-alter table body_weights enable row level security;
-
--- Create policies
-create policy "Users can insert their own exercises"
-  on exercises for insert
-  with check (auth.uid() = user_id);
-
-create policy "Users can view their own exercises"
-  on exercises for select
-  using (auth.uid() = user_id);
-
-create policy "Users can insert their own body weights"
-  on body_weights for insert
-  with check (auth.uid() = user_id);
-
-create policy "Users can update their own body weights"
-  on body_weights for update
-  using (auth.uid() = user_id);
-
-create policy "Users can view their own body weights"
-  on body_weights for select
-  using (auth.uid() = user_id);
-```
-
-5. Start the development server:
+Y asegurar tu OpenAI API Key en el servidor:
 ```bash
-npm run dev
+npx supabase secrets set OPENAI_API_KEY=tu_clave_de_openai
 ```
-
-## Development
-
-The application is built with:
-- React + TypeScript
-- Tailwind CSS for styling
-- React Router for navigation
-- React Calendar for the calendar component
-- Recharts for data visualization
-- Supabase for backend and authentication
-
-## License
-
-MIT
