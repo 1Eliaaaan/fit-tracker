@@ -60,9 +60,12 @@ export default function HistoryPage() {
     sessions.forEach((s) => {
       const raw = s.started_at || s.created_at;
       if (raw) {
-        const dStr = new Date(raw).toISOString().split('T')[0];
-        if (!map.has(dStr)) map.set(dStr, []);
-        map.get(dStr)!.push(s);
+        const d = new Date(raw);
+        if (!isNaN(d.getTime())) {
+          const dStr = d.toISOString().split('T')[0];
+          if (!map.has(dStr)) map.set(dStr, []);
+          map.get(dStr)!.push(s);
+        }
       }
     });
     return map;

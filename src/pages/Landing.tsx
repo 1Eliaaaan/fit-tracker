@@ -1,8 +1,14 @@
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ChartBarIcon, ScaleIcon, ClipboardDocumentCheckIcon, BoltIcon } from '@heroicons/react/24/outline';
+import { useAuth } from '../contexts/AuthProvider';
 
 export default function Landing() {
+  const { user, loading } = useAuth();
+
+  if (!loading && user) {
+    return <Navigate to="/dashboard" replace />;
+  }
   const features = [
     {
       name: 'Trackea tus Entrenos',

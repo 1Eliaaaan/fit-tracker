@@ -207,6 +207,34 @@ export const EXERCISE_LIBRARY: ExerciseInfo[] = [
         description: 'Con la polea a la altura de la cara y cuerda, tira hacia la cara separando las manos. Aprieta los omóplatos y rota los hombros externamente al final. Regresa lentamente.',
         icon: '🔙',
     },
+    {
+        id: 'remo-t-maquina-especifica',
+        name: 'Remo en T en Máquina Específica',
+        category: 'Espalda',
+        description: 'Con el pecho apoyado en la almohadilla de la máquina de Remo en T, agarra las manijas y tira hacia ti apretando los omóplatos. Ideal para aislar la espalda sin forzar la zona lumbar.',
+        icon: '🔙',
+    },
+    {
+        id: 'remo-t-mancuerna',
+        name: 'Remo en T con Mancuerna (Apoyado)',
+        category: 'Espalda',
+        description: 'En un banco inclinado, apoya el pecho y sostén las mancuernas. Tira hacia arriba flexionando los codos. Excelente variante del Remo en T.',
+        icon: '🔙',
+    },
+    {
+        id: 'remo-t-maquina-polea',
+        name: 'Remo en T en Máquina de Polea',
+        category: 'Espalda',
+        description: 'Usando un agarre en V o cuerda acoplado a la polea baja, de pie con las rodillas semi-flexionadas, tira hacia el abdomen como en un remo en T tradicional.',
+        icon: '🔙',
+    },
+    {
+        id: 'remo-unilateral-maquina',
+        name: 'Remo Unilateral en Máquina',
+        category: 'Espalda',
+        description: 'Sentado en la máquina de remo, utiliza un solo brazo a la vez. Permite un mayor rango de movimiento y concentración en el dorsal ancho de cada lado.',
+        icon: '🔙',
+    },
 
     // ═══════════════════════════════════════
     //  HOMBROS
@@ -279,6 +307,27 @@ export const EXERCISE_LIBRARY: ExerciseInfo[] = [
         name: 'Press Arnold',
         category: 'Hombros',
         description: 'Sentado con mancuernas al frente (palmas hacia ti), presiona hacia arriba rotando las muñecas hasta que las palmas miren al frente arriba. Invierte el movimiento al bajar.',
+        icon: '🏋️',
+    },
+    {
+        id: 'encogimientos-mancuernas',
+        name: 'Encogimientos con Mancuernas (Trapecios)',
+        category: 'Hombros',
+        description: 'De pie sosteniendo mancuernas a los lados. Eleva los hombros hacia las orejas encogiendo los trapecios. Sostén un segundo y baja lentamente.',
+        icon: '🏋️',
+    },
+    {
+        id: 'encogimientos-maquina',
+        name: 'Encogimientos en Máquina (Trapecios)',
+        category: 'Hombros',
+        description: 'En la máquina de encogimientos (o multipower), agarra las manijas y eleva los hombros verticalmente. Mantiene la espalda recta y el abdomen contraído.',
+        icon: '🏋️',
+    },
+    {
+        id: 'encogimientos-polea',
+        name: 'Encogimientos en Polea (Trapecios)',
+        category: 'Hombros',
+        description: 'De pie frente a la polea baja con barra recta, agarra la barra y eleva los hombros. La polea ofrece tensión continua en todo el rango de movimiento.',
         icon: '🏋️',
     },
 

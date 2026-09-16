@@ -14,6 +14,8 @@ import {
 } from 'lucide-react';
 import { useWorkoutStore } from '../stores/workoutStore';
 import { useTimerStore } from '../stores/timerStore';
+import { useAuth } from '../contexts/AuthProvider';
+import { fetchLastExercisePerformance } from '../services/workout.service';
 import {
   ALL_MUSCLE_GROUPS,
   MUSCLE_GROUP_ICONS,
@@ -59,6 +61,22 @@ export default function WorkoutActivePage() {
       start();
     }
   }, [workout?.phase, syncElapsed, start]);
+  const { user } = useAuth();
+  const [lastPerformance, setLastPerformance] = useState<any>(null);
+  const phase = workout?.phase ?? 'idle';
+
+  useEffect(() => {
+    if (phase === 'executing_set' && user) {
+      const activeEx = getCurrentExercise();
+      if (activeEx) {
+        fetchLastExercisePerformance(user.id, activeEx.exerciseId).then(res => {
+          setLastPerformance(res);
+        });
+      }
+    } else if (phase !== 'resting') {
+      setLastPerformance(null);
+    }
+  }, [phase, workout?.currentExerciseIndex, user, getCurrentExercise]);
 
   // Selection state
   const [selectedCategory, setSelectedCategory] = useState<MuscleGroup | null>(null);
@@ -67,14 +85,24 @@ export default function WorkoutActivePage() {
   // Set inputs for current set
   const [reps, setReps] = useState(10);
   const [weight, setWeight] = useState(0);
+  const [unit, setUnit] = useState<'kg' | 'lb'>(() => (localStorage.getItem('fit-tracker-unit') as 'kg' | 'lb') || 'kg');
+
+  const handleToggleUnit = () => {
+    const newUnit = unit === 'kg' ? 'lb' : 'kg';
+    setUnit(newUnit);
+    localStorage.setItem('fit-tracker-unit', newUnit);
+    if (newUnit === 'lb') {
+      setWeight((w) => parseFloat((w * 2.20462).toFixed(2)));
+    } else {
+      setWeight((w) => parseFloat((w * 0.45359237).toFixed(2)));
+    }
+  };
 
   // Set editing state
   const [editingSetIndex, setEditingSetIndex] = useState<number | null>(null);
   const [editReps, setEditReps] = useState(10);
   const [editWeight, setEditWeight] = useState(0);
   const [editRest, setEditRest] = useState<number | null>(null);
-
-  const phase = workout?.phase ?? 'idle';
 
   // Guard back navigation
   useEffect(() => {
@@ -97,10 +125,10 @@ export default function WorkoutActivePage() {
       if (ex && ex.sets.length > 0) {
         const last = ex.sets[ex.sets.length - 1];
         setReps(last.reps);
-        setWeight(last.weight_kg);
+        setWeight(unit === 'lb' ? parseFloat((last.weight_kg * 2.20462).toFixed(2)) : last.weight_kg);
       }
     }
-  }, [phase, getCurrentExercise]);
+  }, [phase, getCurrentExercise, unit]);
 
   // Navigate to summary when finished
   useEffect(() => {
@@ -128,17 +156,18 @@ export default function WorkoutActivePage() {
   const handleOpenEditSet = (index: number, s: ActiveSet) => {
     setEditingSetIndex(index);
     setEditReps(s.reps);
-    setEditWeight(s.weight_kg);
+    setEditWeight(unit === 'lb' ? parseFloat((s.weight_kg * 2.20462).toFixed(2)) : s.weight_kg);
     setEditRest(s.rest_secs);
   };
 
   const handleSaveEditedSet = () => {
     if (editingSetIndex !== null) {
+      const finalWeightKg = unit === 'lb' ? parseFloat((editWeight * 0.45359237).toFixed(2)) : editWeight;
       editSet(
         workout.currentExerciseIndex,
         editingSetIndex,
         editReps,
-        editWeight,
+        finalWeightKg,
         editRest
       );
       setEditingSetIndex(null);
@@ -289,9 +318,14 @@ export default function WorkoutActivePage() {
             <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-zinc-950 via-zinc-950/90 to-transparent">
               <div className="max-w-2xl mx-auto">
                 <button
-                  onClick={() => finishWorkout()}
-                  className="w-full bg-zinc-800 border border-zinc-700 hover:bg-zinc-750 text-zinc-100 font-black py-3.5 rounded-2xl uppercase tracking-wider text-sm transition-all"
+                  onClick={() => {
+                    if (window.confirm("¿Seguro que deseas finalizar el entrenamiento completo?")) {
+                      finishWorkout();
+                    }
+                  }}
+                  className="w-full bg-lime-400 border border-lime-500 hover:bg-lime-300 text-zinc-950 font-black py-4 rounded-2xl uppercase tracking-wider text-sm shadow-xl shadow-lime-400/20 transition-all flex items-center justify-center gap-2"
                 >
+                  <Check className="w-5 h-5 stroke-[3]" />
                   Finalizar Sesión ({workout.exercises.length} ejercicios)
                 </button>
               </div>
@@ -343,6 +377,29 @@ export default function WorkoutActivePage() {
                 </span>
               )}
             </div>
+
+            {/* Progression Indicator: Last Session Data */}
+            {lastPerformance && lastPerformance.exercise_sets?.length > 0 && (
+              <div className="mt-4 p-3 bg-zinc-900 border border-zinc-800 rounded-2xl text-left">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-1.5">
+                    <TimerIcon className="w-3.5 h-3.5" />
+                    Entreno Anterior
+                  </span>
+                  <span className="text-[10px] font-mono text-zinc-500">
+                    {new Date(lastPerformance.workout_sessions.started_at).toLocaleDateString()}
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {lastPerformance.exercise_sets.map((s: any, i: number) => (
+                    <div key={i} className={`flex items-center gap-1.5 text-xs font-mono px-2 py-1 rounded-lg border ${currentSetNum === s.set_number ? 'border-lime-400/50 bg-lime-400/10 text-lime-400' : 'border-zinc-800 bg-zinc-800/50 text-zinc-300'}`}>
+                      <span className="font-bold opacity-60">S{s.set_number}</span>
+                      <span>{s.reps}×{s.weight_kg}kg</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Controls: Reps & Weight */}
@@ -375,10 +432,18 @@ export default function WorkoutActivePage() {
             </div>
 
             {/* Weight */}
-            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 flex flex-col items-center">
-              <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-3">
-                Peso (KG)
-              </span>
+            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 flex flex-col items-center relative">
+              <div className="flex items-center justify-between w-full mb-3">
+                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
+                  Peso
+                </span>
+                <button
+                  onClick={handleToggleUnit}
+                  className="px-2 py-0.5 rounded-md bg-zinc-800 text-[10px] font-bold uppercase text-zinc-300 hover:text-lime-400 border border-zinc-700"
+                >
+                  {unit}
+                </button>
+              </div>
               <div className="flex items-center gap-2 w-full justify-between">
                 <button
                   onClick={() => setWeight((w) => Math.max(0, parseFloat((w - 2.5).toFixed(2))))}
@@ -400,14 +465,15 @@ export default function WorkoutActivePage() {
                   +
                 </button>
               </div>
-              <span className="text-[9px] text-zinc-600 font-mono mt-1">paso: ±2.5 kg</span>
+              <span className="text-[9px] text-zinc-600 font-mono mt-1">paso: ±2.5 {unit}</span>
             </div>
           </div>
 
           {/* Primary Action Button: Completar Serie & Iniciar Cronómetro */}
           <button
             onClick={() => {
-              completeSet(reps, weight);
+              const finalWeightKg = unit === 'lb' ? parseFloat((weight * 0.45359237).toFixed(2)) : weight;
+              completeSet(reps, finalWeightKg);
               reset();
               start();
             }}
@@ -465,7 +531,13 @@ export default function WorkoutActivePage() {
           {/* Finish Exercise Button */}
           <div className="pt-2">
             <button
-              onClick={finishCurrentExercise}
+              onClick={() => {
+                if (window.confirm("¿Deseas guardar la serie actual antes de terminar el ejercicio?")) {
+                  const finalWeightKg = unit === 'lb' ? parseFloat((weight * 0.45359237).toFixed(2)) : weight;
+                  completeSet(reps, finalWeightKg);
+                }
+                finishCurrentExercise();
+              }}
               className="w-full bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-zinc-200 font-bold py-3.5 rounded-xl uppercase text-xs tracking-wider transition-colors"
             >
               Terminar {activeEx.exerciseName} →
@@ -532,7 +604,7 @@ export default function WorkoutActivePage() {
 
                     <div>
                       <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-1">
-                        Peso (kg)
+                        Peso ({unit.toUpperCase()})
                       </label>
                       <div className="flex items-center gap-1 bg-zinc-800 rounded-xl p-1">
                         <button
@@ -734,7 +806,11 @@ export default function WorkoutActivePage() {
             </button>
 
             <button
-              onClick={() => finishWorkout()}
+              onClick={() => {
+                if (window.confirm("¿Seguro que deseas finalizar el entrenamiento completo?")) {
+                  finishWorkout();
+                }
+              }}
               className="w-full bg-lime-400 hover:bg-lime-300 text-zinc-950 font-black py-4 rounded-2xl uppercase tracking-wider text-sm flex items-center justify-center gap-2 shadow-lg shadow-lime-400/20 transition-all"
             >
               <Check className="w-4 h-4 stroke-[3]" />
