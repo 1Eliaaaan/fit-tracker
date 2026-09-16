@@ -11,6 +11,8 @@ import {
   Pencil,
   X,
   Flame,
+  Trash2,
+  List,
 } from 'lucide-react';
 import { useWorkoutStore } from '../stores/workoutStore';
 import { useTimerStore } from '../stores/timerStore';
@@ -50,6 +52,7 @@ export default function WorkoutActivePage() {
     goToExerciseSelection,
     getCurrentExercise,
     editSet,
+    deleteSet,
   } = useWorkoutStore();
 
   const { seconds, start, pause, reset, syncElapsed } = useTimerStore();
@@ -99,10 +102,15 @@ export default function WorkoutActivePage() {
   };
 
   // Set editing state
+  const [editingExerciseIndex, setEditingExerciseIndex] = useState<number | null>(null);
   const [editingSetIndex, setEditingSetIndex] = useState<number | null>(null);
   const [editReps, setEditReps] = useState(10);
   const [editWeight, setEditWeight] = useState(0);
   const [editRest, setEditRest] = useState<number | null>(null);
+
+  // Modals state
+  const [showSessionHistory, setShowSessionHistory] = useState(false);
+  const [showFinishConfirm, setShowFinishConfirm] = useState(false);
 
   // Guard back navigation
   useEffect(() => {
@@ -153,26 +161,247 @@ export default function WorkoutActivePage() {
   }
 
   // Open set editor
-  const handleOpenEditSet = (index: number, s: ActiveSet) => {
-    setEditingSetIndex(index);
+  const handleOpenEditSet = (exerciseIndex: number, setIndex: number, s: ActiveSet) => {
+    setEditingExerciseIndex(exerciseIndex);
+    setEditingSetIndex(setIndex);
     setEditReps(s.reps);
     setEditWeight(unit === 'lb' ? parseFloat((s.weight_kg * 2.20462).toFixed(2)) : s.weight_kg);
     setEditRest(s.rest_secs);
   };
 
   const handleSaveEditedSet = () => {
-    if (editingSetIndex !== null) {
+    if (editingSetIndex !== null && editingExerciseIndex !== null) {
       const finalWeightKg = unit === 'lb' ? parseFloat((editWeight * 0.45359237).toFixed(2)) : editWeight;
       editSet(
-        workout.currentExerciseIndex,
+        editingExerciseIndex,
         editingSetIndex,
         editReps,
         finalWeightKg,
         editRest
       );
       setEditingSetIndex(null);
+      setEditingExerciseIndex(null);
     }
   };
+
+  const renderEditModal = () => (
+    <AnimatePresence>
+      {editingSetIndex !== null && editingExerciseIndex !== null && (
+        <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-end md:items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 40 }}
+            className="bg-zinc-900 border border-zinc-800 w-full max-w-md rounded-3xl p-6 space-y-5"
+          >
+            <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+              <div>
+                <h3 className="font-black text-white uppercase text-base">
+                  Editar Serie #{editingSetIndex + 1}
+                </h3>
+                <p className="text-xs text-zinc-500 font-mono mt-0.5">
+                  {workout?.exercises[editingExerciseIndex]?.exerciseName}
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setEditingSetIndex(null);
+                  setEditingExerciseIndex(null);
+                }}
+                className="p-1 text-zinc-500 hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="text-[11px] text-amber-400/90 font-mono bg-amber-400/10 p-2.5 rounded-xl border border-amber-400/20">
+              Nota: Al editar una serie finalizada solo se corrigen valores registrados; el cronómetro permanece inactivo.
+            </p>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-1">
+                  Reps
+                </label>
+                <div className="flex items-center gap-1 bg-zinc-800 rounded-xl p-1">
+                  <button onClick={() => setEditReps((r) => Math.max(0, r - 1))} className="w-9 h-9 rounded-lg bg-zinc-700 text-white font-bold">−</button>
+                  <input type="number" value={editReps} onChange={(e) => setEditReps(Math.max(0, parseInt(e.target.value) || 0))} className="w-full text-center bg-transparent font-mono text-xl font-bold text-lime-400 focus:outline-none" />
+                  <button onClick={() => setEditReps((r) => r + 1)} className="w-9 h-9 rounded-lg bg-zinc-700 text-white font-bold">+</button>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-1">
+                  Peso ({unit.toUpperCase()})
+                </label>
+                <div className="flex items-center gap-1 bg-zinc-800 rounded-xl p-1">
+                  <button onClick={() => setEditWeight((w) => Math.max(0, parseFloat((w - 2.5).toFixed(2))))} className="w-9 h-9 rounded-lg bg-zinc-700 text-white font-bold">−</button>
+                  <input type="number" step="0.5" value={editWeight} onChange={(e) => setEditWeight(Math.max(0, parseFloat(e.target.value) || 0))} className="w-full text-center bg-transparent font-mono text-xl font-bold text-lime-400 focus:outline-none" />
+                  <button onClick={() => setEditWeight((w) => parseFloat((w + 2.5).toFixed(2)))} className="w-9 h-9 rounded-lg bg-zinc-700 text-white font-bold">+</button>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-1">
+                Descanso tomado (segundos)
+              </label>
+              <div className="flex items-center gap-2">
+                <input type="number" value={editRest ?? 0} onChange={(e) => setEditRest(Math.max(0, parseInt(e.target.value) || 0))} className="flex-1 bg-zinc-800 border border-zinc-700 rounded-xl py-2.5 px-3 text-sm font-mono text-white focus:outline-none focus:border-lime-400" placeholder="Segundos" />
+                <button onClick={() => setEditRest((r) => Math.max(0, (r ?? 0) - 15))} className="px-3 py-2.5 bg-zinc-800 border border-zinc-700 rounded-xl text-xs font-mono">-15s</button>
+                <button onClick={() => setEditRest((r) => (r ?? 0) + 15)} className="px-3 py-2.5 bg-zinc-800 border border-zinc-700 rounded-xl text-xs font-mono">+15s</button>
+              </div>
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <button
+                onClick={() => {
+                  if (window.confirm("¿Seguro que deseas eliminar esta serie?")) {
+                    deleteSet(editingExerciseIndex, editingSetIndex);
+                    setEditingSetIndex(null);
+                    setEditingExerciseIndex(null);
+                  }
+                }}
+                className="bg-red-500/10 hover:bg-red-500/20 text-red-400 p-3.5 rounded-xl transition-colors" title="Eliminar serie"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+              <button onClick={() => { setEditingSetIndex(null); setEditingExerciseIndex(null); }} className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold py-3.5 rounded-xl uppercase text-xs">
+                Volver
+              </button>
+              <button onClick={handleSaveEditedSet} className="flex-1 bg-lime-400 hover:bg-lime-300 text-zinc-950 font-black py-3.5 rounded-xl uppercase text-xs shadow-md shadow-lime-400/20">
+                Guardar
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
+  );
+
+  const renderSessionHistoryModal = () => (
+    <AnimatePresence>
+      {showSessionHistory && workout?.exercises && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
+          <motion.div
+            initial={{ opacity: 0, y: '100%' }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: '100%' }}
+            className="bg-zinc-950 border-t md:border border-zinc-800 w-full h-[85vh] md:h-auto md:max-h-[85vh] max-w-2xl md:rounded-3xl flex flex-col shadow-2xl"
+          >
+            <div className="flex-shrink-0 flex items-center justify-between border-b border-zinc-800 p-4 md:p-6">
+              <div>
+                <h3 className="font-black text-white uppercase text-lg flex items-center gap-2">
+                  <List className="w-5 h-5 text-lime-400" />
+                  Ejercicios en Sesión
+                </h3>
+                <p className="text-xs text-zinc-500 font-mono mt-1">
+                  Revisa o edita lo que has hecho hoy
+                </p>
+              </div>
+              <button onClick={() => setShowSessionHistory(false)} className="p-2 text-zinc-500 hover:text-white bg-zinc-900 rounded-full">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
+              {workout.exercises.length === 0 ? (
+                <div className="text-center text-zinc-500 font-mono py-10">No has iniciado ningún ejercicio aún.</div>
+              ) : (
+                workout.exercises.map((ex, exIdx) => (
+                  <div key={ex.tempId} className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-4">
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <h4 className="text-sm font-bold text-white">{ex.exerciseName}</h4>
+                        <span className="text-[10px] text-zinc-500 uppercase tracking-widest">{ex.category}</span>
+                      </div>
+                      <button
+                        onClick={() => {
+                          if (window.confirm("¿Seguro que deseas eliminar este ejercicio por completo?")) {
+                            const { deleteExercise } = useWorkoutStore.getState();
+                            deleteExercise(exIdx);
+                          }
+                        }}
+                        className="text-red-400 hover:text-red-300 p-1 bg-red-400/10 rounded-lg"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    {ex.sets.length === 0 ? (
+                      <p className="text-xs text-zinc-600 font-mono italic">Sin series registradas</p>
+                    ) : (
+                      <div className="space-y-1.5">
+                        {ex.sets.map((s, setIdx) => (
+                          <div
+                            key={setIdx}
+                            onClick={() => handleOpenEditSet(exIdx, setIdx, s)}
+                            className="flex items-center justify-between p-3 rounded-xl bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/50 cursor-pointer active:scale-[0.99] transition-all"
+                          >
+                            <div className="flex items-center gap-3">
+                              <span className="w-6 h-6 rounded bg-zinc-700 text-lime-400 font-mono font-bold text-[10px] flex items-center justify-center">
+                                S{setIdx + 1}
+                              </span>
+                              <div className="font-mono text-xs">
+                                <span className="text-white font-bold">{s.reps}</span> <span className="text-zinc-500">×</span> <span className="text-white font-bold">{s.weight_kg}kg</span>
+                              </div>
+                            </div>
+                            <Pencil className="w-3.5 h-3.5 text-zinc-500" />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
+  );
+
+  const renderFinishConfirmModal = () => (
+    <AnimatePresence>
+      {showFinishConfirm && (
+        <div className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="bg-zinc-900 border border-zinc-800 w-full max-w-sm rounded-3xl p-6 text-center shadow-2xl"
+          >
+            <div className="w-16 h-16 rounded-full bg-lime-400/10 border border-lime-400/30 flex items-center justify-center text-lime-400 mx-auto mb-4">
+              <Check className="w-8 h-8 stroke-[3]" />
+            </div>
+            <h3 className="text-xl font-black text-white uppercase mb-2">¿Finalizar Entrenamiento?</h3>
+            <p className="text-sm text-zinc-400 mb-6">
+              Has completado {workout?.exercises.length || 0} ejercicios en esta sesión. ¿Estás listo para ver tu resumen?
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowFinishConfirm(false)}
+                className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white font-bold py-3.5 rounded-xl text-sm transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => {
+                  setShowFinishConfirm(false);
+                  finishWorkout();
+                }}
+                className="flex-1 bg-lime-400 hover:bg-lime-300 text-zinc-950 font-black py-3.5 rounded-xl uppercase text-sm shadow-lg shadow-lime-400/20 transition-all"
+              >
+                Finalizar
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
+  );
+
+
 
   // ─────────────────────────────────────────────────────────────
   // 1. SELECTING EXERCISE (Category vs Specific search)
@@ -186,6 +415,7 @@ export default function WorkoutActivePage() {
     }
 
     return (
+      <>
       <AnimatePresence mode="wait">
         <motion.div
           key="selecting"
@@ -207,9 +437,13 @@ export default function WorkoutActivePage() {
               </p>
             </div>
             {workout.exercises.length > 0 && (
-              <span className="text-xs font-mono text-lime-400 bg-lime-400/10 border border-lime-400/30 px-2.5 py-1 rounded-full">
+              <button
+                onClick={() => setShowSessionHistory(true)}
+                className="text-xs font-mono text-lime-400 bg-lime-400/10 border border-lime-400/30 px-3 py-1.5 rounded-full hover:bg-lime-400/20 active:scale-95 transition-all flex items-center gap-1.5"
+              >
+                <List className="w-3.5 h-3.5" />
                 {workout.exercises.length} en sesión
-              </span>
+              </button>
             )}
           </div>
 
@@ -318,11 +552,7 @@ export default function WorkoutActivePage() {
             <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-zinc-950 via-zinc-950/90 to-transparent">
               <div className="max-w-2xl mx-auto">
                 <button
-                  onClick={() => {
-                    if (window.confirm("¿Seguro que deseas finalizar el entrenamiento completo?")) {
-                      finishWorkout();
-                    }
-                  }}
+                  onClick={() => setShowFinishConfirm(true)}
                   className="w-full bg-lime-400 border border-lime-500 hover:bg-lime-300 text-zinc-950 font-black py-4 rounded-2xl uppercase tracking-wider text-sm shadow-xl shadow-lime-400/20 transition-all flex items-center justify-center gap-2"
                 >
                   <Check className="w-5 h-5 stroke-[3]" />
@@ -333,6 +563,10 @@ export default function WorkoutActivePage() {
           )}
         </motion.div>
       </AnimatePresence>
+      {renderSessionHistoryModal()}
+      {renderEditModal()}
+      {renderFinishConfirmModal()}
+      </>
     );
   }
 
@@ -345,6 +579,7 @@ export default function WorkoutActivePage() {
     const currentSetNum = activeEx.sets.length + 1;
 
     return (
+      <>
       <AnimatePresence mode="wait">
         <motion.div
           key="executing"
@@ -499,7 +734,7 @@ export default function WorkoutActivePage() {
                 {activeEx.sets.map((s, idx) => (
                   <div
                     key={idx}
-                    onClick={() => handleOpenEditSet(idx, s)}
+                    onClick={() => handleOpenEditSet(workout.currentExerciseIndex, idx, s)}
                     className="flex items-center justify-between p-3.5 rounded-xl bg-zinc-900/90 border border-zinc-800 hover:border-zinc-700 cursor-pointer active:scale-[0.99] transition-all"
                   >
                     <div className="flex items-center gap-3">
@@ -544,139 +779,12 @@ export default function WorkoutActivePage() {
             </button>
           </div>
 
-          {/* Modal to edit completed series */}
-          <AnimatePresence>
-            {editingSetIndex !== null && (
-              <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end md:items-center justify-center p-4">
-                <motion.div
-                  initial={{ opacity: 0, y: 40 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 40 }}
-                  className="bg-zinc-900 border border-zinc-800 w-full max-w-md rounded-3xl p-6 space-y-5"
-                >
-                  <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
-                    <div>
-                      <h3 className="font-black text-white uppercase text-base">
-                        Editar Serie #{editingSetIndex + 1}
-                      </h3>
-                      <p className="text-xs text-zinc-500 font-mono mt-0.5">
-                        {activeEx.exerciseName}
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => setEditingSetIndex(null)}
-                      className="p-1 text-zinc-500 hover:text-white"
-                    >
-                      <X className="w-5 h-5" />
-                    </button>
-                  </div>
-
-                  <p className="text-[11px] text-amber-400/90 font-mono bg-amber-400/10 p-2.5 rounded-xl border border-amber-400/20">
-                    Nota: Al editar una serie finalizada solo se corrigen valores registrados; el cronómetro permanece inactivo.
-                  </p>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-1">
-                        Reps
-                      </label>
-                      <div className="flex items-center gap-1 bg-zinc-800 rounded-xl p-1">
-                        <button
-                          onClick={() => setEditReps((r) => Math.max(0, r - 1))}
-                          className="w-9 h-9 rounded-lg bg-zinc-700 text-white font-bold"
-                        >
-                          −
-                        </button>
-                        <input
-                          type="number"
-                          value={editReps}
-                          onChange={(e) => setEditReps(Math.max(0, parseInt(e.target.value) || 0))}
-                          className="w-full text-center bg-transparent font-mono text-xl font-bold text-lime-400 focus:outline-none"
-                        />
-                        <button
-                          onClick={() => setEditReps((r) => r + 1)}
-                          className="w-9 h-9 rounded-lg bg-zinc-700 text-white font-bold"
-                        >
-                          +
-                        </button>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-1">
-                        Peso ({unit.toUpperCase()})
-                      </label>
-                      <div className="flex items-center gap-1 bg-zinc-800 rounded-xl p-1">
-                        <button
-                          onClick={() => setEditWeight((w) => Math.max(0, parseFloat((w - 2.5).toFixed(2))))}
-                          className="w-9 h-9 rounded-lg bg-zinc-700 text-white font-bold"
-                        >
-                          −
-                        </button>
-                        <input
-                          type="number"
-                          step="0.5"
-                          value={editWeight}
-                          onChange={(e) => setEditWeight(Math.max(0, parseFloat(e.target.value) || 0))}
-                          className="w-full text-center bg-transparent font-mono text-xl font-bold text-lime-400 focus:outline-none"
-                        />
-                        <button
-                          onClick={() => setEditWeight((w) => parseFloat((w + 2.5).toFixed(2)))}
-                          className="w-9 h-9 rounded-lg bg-zinc-700 text-white font-bold"
-                        >
-                          +
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-1">
-                      Descanso tomado (segundos)
-                    </label>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="number"
-                        value={editRest ?? 0}
-                        onChange={(e) => setEditRest(Math.max(0, parseInt(e.target.value) || 0))}
-                        className="flex-1 bg-zinc-800 border border-zinc-700 rounded-xl py-2.5 px-3 text-sm font-mono text-white focus:outline-none focus:border-lime-400"
-                        placeholder="Segundos"
-                      />
-                      <button
-                        onClick={() => setEditRest((r) => Math.max(0, (r ?? 0) - 15))}
-                        className="px-3 py-2.5 bg-zinc-800 border border-zinc-700 rounded-xl text-xs font-mono"
-                      >
-                        -15s
-                      </button>
-                      <button
-                        onClick={() => setEditRest((r) => (r ?? 0) + 15)}
-                        className="px-3 py-2.5 bg-zinc-800 border border-zinc-700 rounded-xl text-xs font-mono"
-                      >
-                        +15s
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-2 pt-2">
-                    <button
-                      onClick={() => setEditingSetIndex(null)}
-                      className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold py-3.5 rounded-xl uppercase text-xs"
-                    >
-                      ← Volver a la serie actual
-                    </button>
-                    <button
-                      onClick={handleSaveEditedSet}
-                      className="flex-1 bg-lime-400 hover:bg-lime-300 text-zinc-950 font-black py-3.5 rounded-xl uppercase text-xs shadow-md shadow-lime-400/20"
-                    >
-                      Guardar Cambios
-                    </button>
-                  </div>
-                </motion.div>
-              </div>
-            )}
-          </AnimatePresence>
         </motion.div>
       </AnimatePresence>
+      {renderSessionHistoryModal()}
+      {renderEditModal()}
+      {renderFinishConfirmModal()}
+      </>
     );
   }
 
@@ -768,6 +876,7 @@ export default function WorkoutActivePage() {
     const activeEx = getCurrentExercise();
 
     return (
+      <>
       <AnimatePresence mode="wait">
         <motion.div
           key="done"
@@ -806,11 +915,7 @@ export default function WorkoutActivePage() {
             </button>
 
             <button
-              onClick={() => {
-                if (window.confirm("¿Seguro que deseas finalizar el entrenamiento completo?")) {
-                  finishWorkout();
-                }
-              }}
+              onClick={() => setShowFinishConfirm(true)}
               className="w-full bg-lime-400 hover:bg-lime-300 text-zinc-950 font-black py-4 rounded-2xl uppercase tracking-wider text-sm flex items-center justify-center gap-2 shadow-lg shadow-lime-400/20 transition-all"
             >
               <Check className="w-4 h-4 stroke-[3]" />
@@ -819,6 +924,8 @@ export default function WorkoutActivePage() {
           </div>
         </motion.div>
       </AnimatePresence>
+      {renderFinishConfirmModal()}
+      </>
     );
   }
 

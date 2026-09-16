@@ -12,7 +12,9 @@ import {
   ListFilter,
   ChevronLeft,
   ChevronRight,
-  Flame
+  Flame,
+  X,
+  Pencil
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthProvider';
@@ -34,6 +36,35 @@ export default function HistoryPage() {
     queryFn: () => fetchSessionHistory(user!.id, 100),
     enabled: !!user?.id,
   });
+
+  // Edit Set State
+  const [editingSet, setEditingSet] = useState<{ id: string, reps: number, weightKg: number, restSecs: number | null, exerciseName: string } | null>(null);
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const unit = (localStorage.getItem('fit-tracker-unit') as 'kg' | 'lb') || 'kg';
+
+  const handleEditSetClick = (setId: string, reps: number, weightKg: number, restSecs: number | null, exerciseName: string) => {
+    setEditingSet({ id: setId, reps, weightKg: unit === 'lb' ? parseFloat((weightKg * 2.20462).toFixed(2)) : weightKg, restSecs, exerciseName });
+  };
+
+  const handleSaveSetEdit = async () => {
+    if (!editingSet) return;
+    try {
+      setIsSavingEdit(true);
+      const { updateExerciseSet } = await import('../services/workout.service');
+      const finalWeightKg = unit === 'lb' ? parseFloat((editingSet.weightKg * 0.45359237).toFixed(2)) : editingSet.weightKg;
+      await updateExerciseSet(editingSet.id, {
+        reps: editingSet.reps,
+        weight_kg: finalWeightKg,
+        rest_secs: editingSet.restSecs
+      });
+      await refetch();
+      setEditingSet(null);
+    } catch (e) {
+      alert("Error al actualizar serie");
+    } finally {
+      setIsSavingEdit(false);
+    }
+  };
 
   // Group by week for list view
   const groupedSessions = useMemo(() => {
@@ -268,7 +299,7 @@ export default function HistoryPage() {
                   No hay entrenamientos registrados en esta fecha.
                 </div>
               ) : (
-                selectedDaySessions.map((session: any) => renderSessionCard(session, expandedSessionId, setExpandedSessionId))
+                selectedDaySessions.map((session: any) => renderSessionCard(session, expandedSessionId, setExpandedSessionId, handleEditSetClick))
               )}
             </div>
           )}
@@ -284,12 +315,114 @@ export default function HistoryPage() {
                 {group}
               </h2>
               <div className="space-y-3">
-                {groupSessions.map((session: any) => renderSessionCard(session, expandedSessionId, setExpandedSessionId))}
+                {groupSessions.map((session: any) => renderSessionCard(session, expandedSessionId, setExpandedSessionId, handleEditSetClick))}
               </div>
             </div>
           ))}
         </div>
       )}
+
+      {/* Edit Set Modal */}
+      <AnimatePresence>
+        {editingSet && (
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end md:items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 40 }}
+              className="bg-zinc-900 border border-zinc-800 w-full max-w-md rounded-3xl p-6 space-y-5 shadow-2xl"
+            >
+              <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+                <div>
+                  <h3 className="font-black text-white uppercase text-base">
+                    Editar Serie
+                  </h3>
+                  <p className="text-xs text-zinc-500 font-mono mt-0.5">
+                    {editingSet.exerciseName}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setEditingSet(null)}
+                  className="p-1 text-zinc-500 hover:text-white"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-1">
+                    Reps
+                  </label>
+                  <div className="flex items-center gap-1 bg-zinc-800 rounded-xl p-1">
+                    <button
+                      onClick={() => setEditingSet(prev => prev ? { ...prev, reps: Math.max(0, prev.reps - 1) } : null)}
+                      className="w-9 h-9 rounded-lg bg-zinc-700 text-white font-bold"
+                    >
+                      −
+                    </button>
+                    <input
+                      type="number"
+                      value={editingSet.reps}
+                      onChange={(e) => setEditingSet(prev => prev ? { ...prev, reps: Math.max(0, parseInt(e.target.value) || 0) } : null)}
+                      className="w-full text-center bg-transparent font-mono text-xl font-bold text-lime-400 focus:outline-none"
+                    />
+                    <button
+                      onClick={() => setEditingSet(prev => prev ? { ...prev, reps: prev.reps + 1 } : null)}
+                      className="w-9 h-9 rounded-lg bg-zinc-700 text-white font-bold"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-1">
+                    Peso ({unit.toUpperCase()})
+                  </label>
+                  <div className="flex items-center gap-1 bg-zinc-800 rounded-xl p-1">
+                    <button
+                      onClick={() => setEditingSet(prev => prev ? { ...prev, weightKg: Math.max(0, parseFloat((prev.weightKg - 2.5).toFixed(2))) } : null)}
+                      className="w-9 h-9 rounded-lg bg-zinc-700 text-white font-bold"
+                    >
+                      −
+                    </button>
+                    <input
+                      type="number"
+                      step="0.5"
+                      value={editingSet.weightKg}
+                      onChange={(e) => setEditingSet(prev => prev ? { ...prev, weightKg: Math.max(0, parseFloat(e.target.value) || 0) } : null)}
+                      className="w-full text-center bg-transparent font-mono text-xl font-bold text-lime-400 focus:outline-none"
+                    />
+                    <button
+                      onClick={() => setEditingSet(prev => prev ? { ...prev, weightKg: parseFloat((prev.weightKg + 2.5).toFixed(2)) } : null)}
+                      className="w-9 h-9 rounded-lg bg-zinc-700 text-white font-bold"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <button
+                  onClick={() => setEditingSet(null)}
+                  className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold py-3.5 rounded-xl uppercase text-xs"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleSaveSetEdit}
+                  disabled={isSavingEdit}
+                  className="flex-1 bg-lime-400 hover:bg-lime-300 disabled:opacity-50 text-zinc-950 font-black py-3.5 rounded-xl uppercase text-xs shadow-md shadow-lime-400/20"
+                >
+                  {isSavingEdit ? 'Guardando...' : 'Guardar'}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -300,7 +433,8 @@ export default function HistoryPage() {
 function renderSessionCard(
   session: any,
   expandedId: string | null,
-  setExpandedId: (id: string | null) => void
+  setExpandedId: (id: string | null) => void,
+  onEditSet?: (setId: string, reps: number, weightKg: number, restSecs: number | null, exerciseName: string) => void
 ) {
   const rawDate = session.started_at || session.created_at;
   const date = rawDate ? new Date(rawDate) : new Date();
@@ -421,11 +555,24 @@ function renderSessionCard(
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
                     {sets.map((s: any, sIdx: number) => (
-                      <div key={sIdx} className="text-[11px] font-mono text-zinc-400 bg-zinc-900 px-2 py-1 rounded">
-                        <span className="text-zinc-600 mr-1">#{s.set_number || sIdx + 1}</span>
-                        <span className="text-zinc-200 font-bold">{s.reps}r</span> × <span className="text-zinc-200 font-bold">{s.weight_kg}kg</span>
-                        {s.rest_secs != null && (
-                          <span className="text-cyan-400/80 text-[10px] block">⏱ {s.rest_secs}s</span>
+                      <div 
+                        key={sIdx}
+                        onClick={() => {
+                          if (onEditSet && s.id) {
+                            onEditSet(s.id, s.reps, s.weight_kg, s.rest_secs, ex.exercise_name);
+                          }
+                        }}
+                        className={`text-[11px] font-mono text-zinc-400 bg-zinc-900 px-2 py-1.5 rounded flex items-center justify-between ${onEditSet && s.id ? 'cursor-pointer hover:bg-zinc-800 active:scale-95 transition-all' : ''}`}
+                      >
+                        <div>
+                          <span className="text-zinc-600 mr-1">#{s.set_number || sIdx + 1}</span>
+                          <span className="text-zinc-200 font-bold">{s.reps}r</span> × <span className="text-zinc-200 font-bold">{s.weight_kg}kg</span>
+                          {s.rest_secs != null && (
+                            <span className="text-cyan-400/80 text-[10px] block">⏱ {s.rest_secs}s</span>
+                          )}
+                        </div>
+                        {onEditSet && s.id && (
+                          <Pencil className="w-3 h-3 text-zinc-600" />
                         )}
                       </div>
                     ))}

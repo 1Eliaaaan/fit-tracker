@@ -19,6 +19,8 @@ interface WorkoutStore {
   completeSet: (reps: number, weight_kg: number) => void;
   finishRest: (rest_secs: number) => void;
   editSet: (exerciseIndex: number, setIndex: number, reps: number, weight_kg: number, rest_secs?: number | null) => void;
+  deleteSet: (exerciseIndex: number, setIndex: number) => void;
+  deleteExercise: (exerciseIndex: number) => void;
 
   // Navegación de fase
   setPhase: (phase: WorkoutPhase) => void;
@@ -172,6 +174,49 @@ export const useWorkoutStore = create<WorkoutStore>()(
           exercises[exerciseIndex] = { ...exercise, sets: updatedSets };
 
           return { workout: { ...state.workout, exercises } };
+        });
+      },
+
+      deleteSet: (exerciseIndex: number, setIndex: number) => {
+        set((state) => {
+          if (!state.workout) return state;
+          const exercises = [...state.workout.exercises];
+          const exercise = exercises[exerciseIndex];
+          if (!exercise) return state;
+
+          const updatedSets = exercise.sets.filter((_, i) => i !== setIndex);
+          // Re-number sets
+          updatedSets.forEach((s, i) => s.setNumber = i + 1);
+
+          exercises[exerciseIndex] = { ...exercise, sets: updatedSets };
+
+          // If current set index is higher than available sets (e.g. we deleted the last one),
+          // adjust currentSetIndex
+          let newCurrentSetIndex = state.workout.currentSetIndex;
+          if (exerciseIndex === state.workout.currentExerciseIndex && newCurrentSetIndex > updatedSets.length) {
+            newCurrentSetIndex = updatedSets.length;
+          }
+
+          return { workout: { ...state.workout, exercises, currentSetIndex: newCurrentSetIndex } };
+        });
+      },
+
+      deleteExercise: (exerciseIndex: number) => {
+        set((state) => {
+          if (!state.workout) return state;
+          const exercises = state.workout.exercises.filter((_, i) => i !== exerciseIndex);
+          
+          let phase = state.workout.phase;
+          let currentExerciseIndex = state.workout.currentExerciseIndex;
+
+          if (exercises.length === 0) {
+            phase = 'selecting_exercise';
+            currentExerciseIndex = 0;
+          } else if (currentExerciseIndex >= exercises.length) {
+            currentExerciseIndex = exercises.length - 1;
+          }
+
+          return { workout: { ...state.workout, exercises, phase, currentExerciseIndex } };
         });
       },
 
