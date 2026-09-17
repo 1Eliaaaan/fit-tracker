@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">fit-tracker</string>
+    <string name="title_activity_main">fit-tracker</string>
+    <string name="package_name">org.elian.fittracker</string>
+    <string name="custom_url_scheme">org.elian.fittracker</string>
+</resources>
