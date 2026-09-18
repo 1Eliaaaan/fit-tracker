@@ -65,24 +65,28 @@ jobs:
           npm run build
           npx cap sync ios
 
-      - name: Build iOS Simulator App
+      - name: Build iOS App
         working-directory: ./ios/App
         run: |
           xcodebuild \
             -project App.xcodeproj \
             -scheme App \
-            -configuration Debug \
-            -sdk iphonesimulator \
-            -destination 'generic/platform=iOS Simulator' \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
             clean build \
             CONFIGURATION_BUILD_DIR=$PWD/build
 
-      - name: Zip iOS App for BrowserStack
+      - name: Package iOS IPA
         working-directory: ./ios/App/build
-        run: zip -r App-Simulator.zip App.app
+        run: |
+          mkdir Payload
+          mv App.app Payload/
+          zip -r app-release.ipa Payload
 
       - name: Upload iOS App Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: app-simulator-ios
-          path: ios/App/build/App-Simulator.zip
+          name: app-ios-ipa
+          path: ios/App/build/app-release.ipa
