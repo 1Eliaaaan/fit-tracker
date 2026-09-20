@@ -28,7 +28,8 @@ export default function HistoryPage() {
   // Calendar State
   const [currentCalendarDate, setCurrentCalendarDate] = useState(() => new Date());
   const [selectedCalendarDay, setSelectedCalendarDay] = useState<string | null>(() => {
-    return new Date().toISOString().split('T')[0];
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   });
 
   const { data: sessions = [], isLoading, refetch, isRefetching } = useQuery({
@@ -93,7 +94,7 @@ export default function HistoryPage() {
       if (raw) {
         const d = new Date(raw);
         if (!isNaN(d.getTime())) {
-          const dStr = d.toISOString().split('T')[0];
+          const dStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
           if (!map.has(dStr)) map.set(dStr, []);
           map.get(dStr)!.push(s);
         }
@@ -525,7 +526,7 @@ function renderSessionCard(
       {aiSummary?.summary_text && (
         <div className="mt-3 p-3 rounded-xl bg-lime-400/5 border border-lime-400/20 text-xs text-zinc-300 flex items-start gap-2">
           <Bot className="w-4 h-4 text-lime-400 flex-shrink-0 mt-0.5" />
-          <p className="line-clamp-2 italic leading-relaxed">
+          <p className={`${isExpanded ? '' : 'line-clamp-2'} italic leading-relaxed whitespace-pre-wrap`}>
             "{aiSummary.summary_text}"
           </p>
         </div>

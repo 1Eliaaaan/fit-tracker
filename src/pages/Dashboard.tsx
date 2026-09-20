@@ -97,10 +97,10 @@ export default function Dashboard() {
         ) : (
           <div className="space-y-3">
             {sessions.map((session) => {
-              const exCount = session.exercises?.length ?? 0;
-              const volume = session.exercises?.reduce(
+              const exCount = session.session_exercises?.length ?? 0;
+              const volume = session.session_exercises?.reduce(
                 (acc: number, ex: any) =>
-                  acc + (ex.sets ?? []).reduce((s: number, set: any) => s + (set.reps ?? 0) * (set.weight_kg ?? 0), 0),
+                  acc + (ex.exercise_sets ?? []).reduce((s: number, set: any) => s + (set.reps ?? 0) * (set.weight_kg ?? 0), 0),
                 0
               ) ?? 0;
               return (
