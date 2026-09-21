@@ -142,12 +142,12 @@ export interface PersonalRecord {
 // ─── Historial completo de sesión (joined) ───────────────────────
 
 export interface SessionWithDetails extends WorkoutSession {
-  exercises: SessionExerciseWithSets[];
-  ai_summary?: SessionAISummary;
+  session_exercises: SessionExerciseWithSets[];
+  session_ai_summary?: SessionAISummary | SessionAISummary[];
 }
 
 export interface SessionExerciseWithSets extends SessionExercise {
-  sets: ExerciseSet[];
+  exercise_sets: ExerciseSet[];
 }
 
 // ─── Peso corporal ────────────────────────────────────────────────

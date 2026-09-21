@@ -35,9 +35,9 @@ export default function StatsPage() {
   const volumeChartData = [...sessions]
     .reverse()
     .map((s) => {
-      const vol = (s.exercises ?? []).reduce(
+      const vol = (s.session_exercises ?? []).reduce(
         (acc: number, ex: any) =>
-          acc + (ex.sets ?? []).reduce((sAcc: number, set: any) => sAcc + (set.reps ?? 0) * (set.weight_kg ?? 0), 0),
+          acc + (ex.exercise_sets ?? []).reduce((sAcc: number, set: any) => sAcc + (set.reps ?? 0) * (set.weight_kg ?? 0), 0),
         0
       );
       const dateStr = new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'short' }).format(new Date(s.started_at));
