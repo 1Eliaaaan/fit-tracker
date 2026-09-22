@@ -53,6 +53,7 @@ export default function WorkoutActivePage() {
     getCurrentExercise,
     editSet,
     deleteSet,
+    deleteExercise,
   } = useWorkoutStore();
 
   const { seconds, start, pause, reset, syncElapsed } = useTimerStore();
@@ -763,20 +764,23 @@ export default function WorkoutActivePage() {
             </div>
           )}
 
-          {/* Finish Exercise Button */}
+          {/* Finish or Cancel Exercise Button */}
           <div className="pt-2">
-            <button
-              onClick={() => {
-                if (window.confirm("¿Deseas guardar la serie actual antes de terminar el ejercicio?")) {
-                  const finalWeightKg = unit === 'lb' ? parseFloat((weight * 0.45359237).toFixed(2)) : weight;
-                  completeSet(reps, finalWeightKg);
-                }
-                finishCurrentExercise();
-              }}
-              className="w-full bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-zinc-200 font-bold py-3.5 rounded-xl uppercase text-xs tracking-wider transition-colors"
-            >
-              Terminar {activeEx.exerciseName} →
-            </button>
+            {activeEx.sets.length === 0 ? (
+              <button
+                onClick={() => deleteExercise(workout.currentExerciseIndex)}
+                className="w-full bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 text-red-400 font-bold py-3.5 rounded-xl uppercase text-xs tracking-wider transition-colors"
+              >
+                Cancelar Ejercicio (Máquina Ocupada)
+              </button>
+            ) : (
+              <button
+                onClick={() => finishCurrentExercise()}
+                className="w-full bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-zinc-200 font-bold py-3.5 rounded-xl uppercase text-xs tracking-wider transition-colors"
+              >
+                Terminar {activeEx.exerciseName} →
+              </button>
+            )}
           </div>
 
         </motion.div>
