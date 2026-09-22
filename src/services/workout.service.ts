@@ -146,6 +146,27 @@ export async function updateExerciseSet(
   return data;
 }
 
+// ─── Delete functions ────────────────────────────────────────────
+
+export async function deleteSessionExercise(exerciseId: string): Promise<void> {
+  // Primero eliminamos las series para evitar errores de llave foránea si no hay CASCADE
+  await supabase.from('exercise_sets').delete().eq('session_exercise_id', exerciseId);
+  
+  const { error } = await supabase
+    .from('session_exercises')
+    .delete()
+    .eq('id', exerciseId);
+  if (error) throw error;
+}
+
+export async function deleteExerciseSet(setId: string): Promise<void> {
+  const { error } = await supabase
+    .from('exercise_sets')
+    .delete()
+    .eq('id', setId);
+  if (error) throw error;
+}
+
 // ─── Guardar sesión completa desde el store activo ─────────────
 // Llama esta función al finalizar el workout para persistirlo todo de golpe
 

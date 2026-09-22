@@ -67,6 +67,33 @@ export default function HistoryPage() {
     }
   };
 
+  const handleDeleteSet = async () => {
+    if (!editingSet) return;
+    if (!window.confirm("¿Estás seguro de que quieres eliminar esta serie?")) return;
+    try {
+      setIsSavingEdit(true);
+      const { deleteExerciseSet } = await import('../services/workout.service');
+      await deleteExerciseSet(editingSet.id);
+      await refetch();
+      setEditingSet(null);
+    } catch (e) {
+      alert("Error al eliminar serie");
+    } finally {
+      setIsSavingEdit(false);
+    }
+  };
+
+  const handleDeleteExercise = async (exerciseId: string, exerciseName: string) => {
+    if (!window.confirm(`¿Estás seguro de que quieres eliminar el ejercicio ${exerciseName}?`)) return;
+    try {
+      const { deleteSessionExercise } = await import('../services/workout.service');
+      await deleteSessionExercise(exerciseId);
+      await refetch();
+    } catch (e) {
+      alert("Error al eliminar ejercicio");
+    }
+  };
+
   // Group by week for list view
   const groupedSessions = useMemo(() => {
     return sessions.reduce((acc, session) => {
@@ -300,7 +327,7 @@ export default function HistoryPage() {
                   No hay entrenamientos registrados en esta fecha.
                 </div>
               ) : (
-                selectedDaySessions.map((session: any) => renderSessionCard(session, expandedSessionId, setExpandedSessionId, handleEditSetClick))
+                selectedDaySessions.map((session: any) => renderSessionCard(session, expandedSessionId, setExpandedSessionId, handleEditSetClick, handleDeleteExercise))
               )}
             </div>
           )}
@@ -316,7 +343,7 @@ export default function HistoryPage() {
                 {group}
               </h2>
               <div className="space-y-3">
-                {groupSessions.map((session: any) => renderSessionCard(session, expandedSessionId, setExpandedSessionId, handleEditSetClick))}
+                {groupSessions.map((session: any) => renderSessionCard(session, expandedSessionId, setExpandedSessionId, handleEditSetClick, handleDeleteExercise))}
               </div>
             </div>
           ))}
@@ -407,6 +434,14 @@ export default function HistoryPage() {
 
               <div className="flex gap-2 pt-2">
                 <button
+                  onClick={handleDeleteSet}
+                  disabled={isSavingEdit}
+                  className="p-3.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl transition-colors"
+                  title="Eliminar serie"
+                >
+                  <Trash2 className="w-5 h-5" />
+                </button>
+                <button
                   onClick={() => setEditingSet(null)}
                   className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold py-3.5 rounded-xl uppercase text-xs"
                 >
@@ -435,7 +470,8 @@ function renderSessionCard(
   session: any,
   expandedId: string | null,
   setExpandedId: (id: string | null) => void,
-  onEditSet?: (setId: string, reps: number, weightKg: number, restSecs: number | null, exerciseName: string) => void
+  onEditSet?: (setId: string, reps: number, weightKg: number, restSecs: number | null, exerciseName: string) => void,
+  onDeleteExercise?: (exerciseId: string, exerciseName: string) => void
 ) {
   const rawDate = session.started_at || session.created_at;
   const date = rawDate ? new Date(rawDate) : new Date();
@@ -550,9 +586,16 @@ function renderSessionCard(
                 <div key={exIdx} className="bg-zinc-950/80 rounded-xl p-3 border border-zinc-800/60">
                   <div className="flex justify-between items-center mb-2">
                     <span className="font-bold text-xs text-white uppercase">{ex.exercise_name}</span>
-                    <span className="text-[10px] font-mono text-lime-400 bg-lime-400/10 px-1.5 py-0.5 rounded">
-                      {ex.category}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-mono text-lime-400 bg-lime-400/10 px-1.5 py-0.5 rounded">
+                        {ex.category}
+                      </span>
+                      {onDeleteExercise && ex.id && (
+                        <button onClick={(e) => { e.stopPropagation(); onDeleteExercise(ex.id, ex.exercise_name); }} className="text-zinc-500 hover:text-red-400 transition-colors p-1" title="Eliminar ejercicio">
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
                     {sets.map((s: any, sIdx: number) => (
