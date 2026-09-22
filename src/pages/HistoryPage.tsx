@@ -14,7 +14,8 @@ import {
   ChevronRight,
   Flame,
   X,
-  Pencil
+  Pencil,
+  Trash2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthProvider';
