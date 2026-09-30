@@ -576,7 +576,16 @@ export default function WorkoutActivePage() {
   // ─────────────────────────────────────────────────────────────
   if (phase === 'executing_set') {
     const activeEx = getCurrentExercise();
-    if (!activeEx) return null;
+    if (!activeEx) {
+      return (
+        <div className="min-h-screen bg-zinc-950 flex flex-col justify-center items-center p-6 gap-4">
+          <p className="text-zinc-500 font-mono text-center text-sm">Ocurrió un error al cargar el ejercicio.</p>
+          <button onClick={() => setPhase('selecting_exercise')} className="bg-zinc-800 text-white font-black px-6 py-3 rounded-xl uppercase tracking-wider mt-4">
+            Recuperar Sesión
+          </button>
+        </div>
+      );
+    }
     const currentSetNum = activeEx.sets.length + 1;
 
     return (
@@ -797,7 +806,17 @@ export default function WorkoutActivePage() {
   // ─────────────────────────────────────────────────────────────
   if (phase === 'resting') {
     const activeEx = getCurrentExercise();
-    const lastSet = activeEx?.sets[activeEx.sets.length - 1];
+    if (!activeEx) {
+      return (
+        <div className="min-h-screen bg-zinc-950 flex flex-col justify-center items-center p-6 gap-4">
+          <p className="text-zinc-500 font-mono text-center text-sm">Ocurrió un error al cargar el descanso.</p>
+          <button onClick={() => setPhase('selecting_exercise')} className="bg-zinc-800 text-white font-black px-6 py-3 rounded-xl uppercase tracking-wider mt-4">
+            Recuperar Sesión
+          </button>
+        </div>
+      );
+    }
+    const lastSet = activeEx.sets[activeEx.sets.length - 1];
 
     return (
       <AnimatePresence mode="wait">
