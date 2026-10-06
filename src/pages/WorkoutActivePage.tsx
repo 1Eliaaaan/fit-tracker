@@ -54,6 +54,7 @@ export default function WorkoutActivePage() {
     editSet,
     deleteSet,
     deleteExercise,
+    setPhase,
   } = useWorkoutStore();
 
   const { seconds, start, pause, reset, syncElapsed } = useTimerStore();

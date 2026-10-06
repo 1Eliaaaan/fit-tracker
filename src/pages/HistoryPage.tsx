@@ -95,6 +95,17 @@ export default function HistoryPage() {
     }
   };
 
+  const handleDeleteSession = async (sessionId: string, dateStr: string) => {
+    if (!window.confirm(`¿Estás seguro de que quieres eliminar TODA la sesión del ${dateStr}?\n\nEsta acción no se puede deshacer.`)) return;
+    try {
+      const { deleteWorkoutSession } = await import('../services/workout.service');
+      await deleteWorkoutSession(sessionId);
+      await refetch();
+    } catch (e) {
+      alert("Error al eliminar la sesión");
+    }
+  };
+
   // Group by week for list view
   const groupedSessions = useMemo(() => {
     return sessions.reduce((acc, session) => {
@@ -328,7 +339,7 @@ export default function HistoryPage() {
                   No hay entrenamientos registrados en esta fecha.
                 </div>
               ) : (
-                selectedDaySessions.map((session: any) => renderSessionCard(session, expandedSessionId, setExpandedSessionId, handleEditSetClick, handleDeleteExercise))
+                selectedDaySessions.map((session: any) => renderSessionCard(session, expandedSessionId, setExpandedSessionId, handleEditSetClick, handleDeleteExercise, handleDeleteSession))
               )}
             </div>
           )}
@@ -344,7 +355,7 @@ export default function HistoryPage() {
                 {group}
               </h2>
               <div className="space-y-3">
-                {groupSessions.map((session: any) => renderSessionCard(session, expandedSessionId, setExpandedSessionId, handleEditSetClick, handleDeleteExercise))}
+                {groupSessions.map((session: any) => renderSessionCard(session, expandedSessionId, setExpandedSessionId, handleEditSetClick, handleDeleteExercise, handleDeleteSession))}
               </div>
             </div>
           ))}
@@ -472,7 +483,8 @@ function renderSessionCard(
   expandedId: string | null,
   setExpandedId: (id: string | null) => void,
   onEditSet?: (setId: string, reps: number, weightKg: number, restSecs: number | null, exerciseName: string) => void,
-  onDeleteExercise?: (exerciseId: string, exerciseName: string) => void
+  onDeleteExercise?: (exerciseId: string, exerciseName: string) => void,
+  onDeleteSession?: (sessionId: string, dateStr: string) => void
 ) {
   const rawDate = session.started_at || session.created_at;
   const date = rawDate ? new Date(rawDate) : new Date();
@@ -530,7 +542,7 @@ function renderSessionCard(
           </div>
         </div>
 
-        <div className="text-right flex items-center gap-3">
+        <div className="text-right flex items-center gap-2 md:gap-3">
           <div>
             <span className="block font-mono text-xl font-black text-lime-400">
               {totalVolume.toLocaleString()}
@@ -539,6 +551,18 @@ function renderSessionCard(
               KG VOL
             </span>
           </div>
+          {onDeleteSession && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDeleteSession(session.id, validDate.toLocaleDateString());
+              }}
+              className="p-2 text-zinc-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors ml-1"
+              title="Eliminar sesión completa"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
           <div className="p-1 text-zinc-500">
             {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </div>

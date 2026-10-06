@@ -148,6 +148,22 @@ export async function updateExerciseSet(
 
 // ─── Delete functions ────────────────────────────────────────────
 
+export async function deleteWorkoutSession(sessionId: string): Promise<void> {
+  // Cascading deletes for exercises and sets should ideally be handled by Supabase FK constraints (ON DELETE CASCADE),
+  // but to be safe we can let Supabase handle it or delete them manually. Assuming CASCADE is configured.
+  // Wait, in previous step I did manual cascade for sets. Let's do manual cascade here just in case.
+  const { data: exercises } = await supabase.from('session_exercises').select('id').eq('session_id', sessionId);
+  if (exercises && exercises.length > 0) {
+    const exIds = exercises.map(ex => ex.id);
+    await supabase.from('exercise_sets').delete().in('session_exercise_id', exIds);
+    await supabase.from('session_exercises').delete().in('id', exIds);
+  }
+  await supabase.from('session_ai_summary').delete().eq('session_id', sessionId);
+  
+  const { error } = await supabase.from('workout_sessions').delete().eq('id', sessionId);
+  if (error) throw error;
+}
+
 export async function deleteSessionExercise(exerciseId: string): Promise<void> {
   // Primero eliminamos las series para evitar errores de llave foránea si no hay CASCADE
   await supabase.from('exercise_sets').delete().eq('session_exercise_id', exerciseId);
